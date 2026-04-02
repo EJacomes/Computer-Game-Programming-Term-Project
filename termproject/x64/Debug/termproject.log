@@ -1,0 +1,7 @@
+﻿  game.cpp
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(105,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(110,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(115,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(120,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(181,26): warning C4305: 'initializing': truncation from 'double' to 'float'
+  termproject.vcxproj -> C:\Users\erija\source\repos\termproject\x64\Debug\termproject.exe
