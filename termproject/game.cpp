@@ -4,7 +4,7 @@
 //max waves: 10
 //User will start out with a slow speed, slow fire rate, low health
 //User will have the chance to upgrade those elements after the end of each round
-//The amount of enemy that user will have to face is based on starting wave + (wave num * 5)
+//The amount of enemy that user will have to face is based on starting starting amount of enemies + (wave num - 1 * 5) (starting amount is 10)
 //enemies will only have one health and will give the player a certain amount of money to spend for upgrades
 
 
@@ -16,7 +16,8 @@ Please mark the date of successfull completion of item
 3. implement bigger background and adjust the code for it (4/1/26)
 4. implement gunfire and explosion (look at the tank game) (have them set to the lowest firerate) (4/5/26)
 5. intialize speed, fire rate, health for later on when the upgrading features is being worked on (4/5/26)
-6. implement enemy function and complete enemy design 
+6. implement enemy function and complete enemy design (4/11/26)
+6.5. Fix the health issue where the player loses health 
 7. implement reset feature where the enemies and tiles are spawned in after all do the enemies are defeated and the user allows the game to continue (use message box)
 8. implement the UI for the game (pausing, wave over screen, buttons to lead to upgrade shop or next round, game over screen with score and money
 and buttons to reset or quit), upgrade shop, health bar that changes during game play
@@ -70,6 +71,33 @@ int world_height = 912;
 const float framerate = 30;
 bool gameover;
 
+//variables that will change as the rounds keep on going
+//wave 0 - 9 is the same as wave 1 - 10
+int waves = 0;
+//since the Model2D, I will have to declare the amount of numbers per wave manually and set all of those as consts;
+//4/8/26, 7:43 pm: new plan, I will set the Model2D enemy amount to the final amount of enemies faced  in wave 10 then only call a small amount of enemies in per waves
+//This will use an array of the amount of enemies there will be per wave (10, 20, 25, 30, 35, 40, 45, 50, 55, 60) with their corresponding index (index 0 = wave 1, index 1 = wave 2... index 9 = wave 10
+int enemy_amounts[10] = {10, 20, 25, 30, 35, 40, 45, 50, 55, 60};
+
+//add the other variables from wave 2 to 10
+int money_dropped = 5;
+
+//total money earned 
+int money_earned = 0;
+//player score
+int score = 0;
+//tracks amount of enemy dead
+int killTracker = 0;
+
+//enemy settings
+//need to make the drawing of the enemy
+//if enemy needs to a const variable to make those enemy npcs
+//60 is based on the amount of enemies called in wave 10
+const int total_amount = 60;
+Model2D enemy[total_amount];
+bool enemy_valid[total_amount];
+
+
 //may add the road_pos just for the player to have one spot to constantly spawn in
 int road_pos_y = 700;
 int road_pos_x = 935;
@@ -85,6 +113,10 @@ int player_cooldown = 1000; // allow to fire every x ms
 
 //the variable player_health will start at 3 but will have a max of 15
 int player_health = 3;
+
+int hit = -1; //this will serve in place of the die var from tank game
+//since the bullet with hit the player three times when hit with a bullet under player_health
+//using hit like how die was used can allowed for the player to get hit one time
 
 //gunplay setting
 std::unique_ptr<SoundEffect> gunfire;
@@ -107,6 +139,22 @@ int last_explosion = -1;
 //once the player loses all their live then the game will end
 //intialize the enemy bullets and explosion variable
 //intialize the enemy variables and then make the enemy bullets and explosion method and then make enemy methods
+const int enemy_cooldown = 200;
+int enemy_cooling[total_amount];
+const int enemy_speed = 10;
+float enemy_movement_speed = enemy_speed / 2;
+const int ENEMY_BULLET_NUMBER = 100;
+Model2D Enemybullet[ENEMY_BULLET_NUMBER];
+bool enemy_bullet_valid[ENEMY_BULLET_NUMBER];
+int enemy_last_bullet = -1;
+float enemy_bullet_speed = 2 * enemy_speed;
+
+Model2D enemyexplosion[ENEMY_BULLET_NUMBER];
+bool enemyexplosion_valid[ENEMY_BULLET_NUMBER];
+int enemy_last_explosion = -1;
+
+//methods to update the elements that are everchanging
+
 
 void LoadPlayer()
 {
@@ -198,6 +246,95 @@ void LoadPlayerExplsions()
     }
 }
 
+void LoadEnemyBullets()
+{
+    for (int i = 0; i < ENEMY_BULLET_NUMBER; i++)
+    {
+        Enemybullet[i] = CreateModel2D(L"bullet.png");
+        Enemybullet[i].move_x = 0;
+        Enemybullet[i].move_y = 0;
+        enemy_bullet_valid[i] = false;
+
+        //MessageBox(NULL, L"Loading enemy bullet", L"message", MB_OK);
+    }
+}
+
+void LoadEnemyExplosions()
+{
+    for (int i = 0; i < ENEMY_BULLET_NUMBER; i++)
+    {
+        enemyexplosion[i] = CreateModel2D(L"explosion.png", 8, 8);
+        enemyexplosion_valid[i] = false;
+    }
+}
+
+void LoadEnemies()
+{
+    for (int i = 0; i < enemy_amounts[waves]; i++)
+    {
+        enemy[i] = CreateModel2D(L"enemy_model.png", 4, 1);
+        enemy_valid[i] = true;
+
+        enemy[i].x = rand() % (Width - Player.frame_width);
+        enemy[i].y = rand() % (Height - Player.frame_height);
+
+        //random direction
+        switch (rand() % 4)
+        {
+        case 0:
+            enemy[i].frame = 0;
+            enemy[i].move_x = 0;
+            enemy[i].move_y = -enemy_speed;
+            break;
+        case 1:
+            enemy[i].frame = 1;
+            enemy[i].move_x = -enemy_speed;
+            enemy[i].move_y = 0;
+            break;
+        case 2:
+            enemy[i].frame = 2;
+            enemy[i].move_x = 0;
+            enemy[i].move_y = enemy_speed;
+        case 3:
+            enemy[i].frame = 3;
+            enemy[i].move_x = enemy_speed;
+            enemy[i].move_y = 0;
+            break;
+        }
+
+        for (int j = 0; j < STONES_NUMBER; j++)
+        {
+            if (stone_valid[j] && CheckModel2DCollided(enemy[i], stone[j]))
+            {
+                ZeroMemory(&stone[j], sizeof(Model2D));
+                stone_valid[j] = false;
+            }
+        }
+
+        //make the loops for boxes and sticks
+        for (int j = 0; j < BOXES_NUMBER; j++)
+        {
+            if (box_valid[j] && CheckModel2DCollided(enemy[i], box[j]))
+            {
+                ZeroMemory(&box[j], sizeof(Model2D));
+                box_valid[j] = false;
+            }
+        }
+        
+        for (int j = 0; j < STICKS_NUMBER; j++)
+        {
+            if (stick_valid[j] && CheckModel2DCollided(enemy[i], stick[j]))
+            {
+                ZeroMemory(&stick[j], sizeof(Model2D));
+                stick_valid[j] = false;
+            }
+        }
+
+        //MessageBox(NULL, L"loads enemy", L"Game Over", MB_OK);
+        //this shows that the 10 enemies are getting loaded in
+    }
+}
+
 void UpdatePlayer()
 {
     auto kb = keyboard->GetState();
@@ -272,6 +409,35 @@ void UpdatePlayer()
             Player.x -= Player.move_x;
             Player.y -= Player.move_y;
         }
+    }
+
+    for (int i = 0; i < ENEMY_BULLET_NUMBER; i++)
+    {
+       if (enemy_bullet_valid[i] && CheckModel2DCollided(Player, Enemybullet[i]) && hit < 0)
+       {
+           enemy_last_explosion++;
+
+           if (enemy_last_explosion >= ENEMY_BULLET_NUMBER)
+           {
+               enemy_last_explosion = 0;
+           }
+
+           enemyexplosion[enemy_last_explosion].x = Player.x;
+           enemyexplosion[enemy_last_explosion].y = Player.y;
+           enemyexplosion[enemy_last_explosion].frame = 0;
+           enemyexplosion_valid[enemy_last_explosion] = true;
+           //player_health -= 1;
+           hit = enemy_last_explosion;
+           //MessageBox(NULL, L"Player health", L"hit", MB_OK);
+           //if one bullet hits the player then the box will be played three times
+
+           explode->Play();
+           
+           if (player_health < 0)
+           {
+               player_health = 0;
+           }
+       }
     }
 }
 
@@ -417,6 +583,236 @@ void UpdatePlayerExplosions()
             explosion_valid[i] = false;
         }
     }
+
+    /*if (player_health <= 0 && enemyexplosion[player_health].frame >= enemyexplosion[player_health].frame_total)
+    {
+        MessageBox(NULL, L"Defeated", L"Game Over", MB_OK);
+        gameover = true;
+    }*/
+
+    if (hit >= 0)
+    {
+        //MessageBox(NULL, L"testing", L"test", MB_OK);
+        player_health -= 1;
+        hit = -1;
+    }
+
+    if (player_health <= 0)
+    {
+        MessageBox(NULL, L"Defeated", L"Game Over", MB_OK);
+        gameover = true;
+    }
+
+    /*if (score == enemy_amounts[waves])
+    {
+        //this could be where the wave function is set
+        MessageBox(NULL, L"Victory", L"Game Over", MB_OK);
+        //replace this later
+        gameover = true;
+    }*/
+}
+
+void UpdateEnemies()
+{
+    for (int i = 0; i < enemy_amounts[waves]; i++)
+    {
+        if (enemy_valid[i])
+        {
+            //if reaches the edge then it turns around
+            enemy[i].x += enemy[i].move_x;
+            enemy[i].y += enemy[i].move_y;
+
+            if (enemy[i].x < 0)
+            {
+                enemy[i].x = 0;
+                enemy[i].move_x *= -1;
+            }
+
+            if (enemy[i].x > Width - enemy[i].frame_width)
+            {
+                enemy[i].x = Width - enemy[i].frame_width;
+                enemy[i].move_x *= -1;
+            }
+
+            if (enemy[i].y < 0)
+            {
+                enemy[i].y = 0;
+                enemy[i].move_y *= -1;
+            }
+
+            if (enemy[i].y > Height - enemy[i].frame_height)
+            {
+                enemy[i].y = Height - enemy[i].frame_height;
+                enemy[i].move_y *= -1;
+            }
+
+            //if collided with stone, box, stick then reverse the direction
+            for (int j = 0; j < STONES_NUMBER; j++)
+            {
+                if (stone_valid[j] && CheckModel2DCollided(enemy[i], stone[j]))
+                {
+                    enemy[i].move_x *= -1;
+                    enemy[i].move_y *= -1;
+                }
+            }
+
+            for (int j = 0; j < BOXES_NUMBER; j++)
+            {
+                if (box_valid[j] && CheckModel2DCollided(enemy[i], box[j]))
+                {
+                    enemy[i].move_x *= -1;
+                    enemy[i].move_y *= -1;
+                }
+            }
+
+            for (int j = 0; j < STICKS_NUMBER; j++)
+            {
+                if (stick_valid[j] && CheckModel2DCollided(enemy[i], stick[j]))
+                {
+                    enemy[i].move_x *= -1;
+                    enemy[i].move_y *= -1;
+                }
+            }
+
+            //putting in the proper frame when on the direction they are facing
+            if (enemy[i].move_x < 0)
+            {
+                enemy[i].frame = 3;
+            }
+
+            if (enemy[i].move_x > 0)
+            {
+                enemy[i].frame = 1;
+            }
+
+            if (enemy[i].move_y < 0)
+            {
+                enemy[i].frame = 0;
+            }
+
+            if (enemy[i].move_y > 0)
+            {
+                enemy[i].frame = 2;
+            }
+
+            //if enemy is hit by player bullet then it explodes
+            for (int j = 0; j < PLAYER_BULLETS_NUMBER; j++)
+            {
+                if (bullet_valid[j] && CheckModel2DCollided(enemy[i], bullet[j]))
+                {
+                    bullet[j].move_x = 0;
+                    bullet[j].move_y = 0;
+                    bullet_valid[j] = false;
+                    enemy_valid[i] = false;
+                    score++;
+                    killTracker++;
+                    money_earned += money_dropped;
+                    last_explosion++;
+
+                    if (last_explosion >= PLAYER_BULLETS_NUMBER)
+                    {
+                        last_explosion = 0;
+                    }
+
+                    explosion[last_explosion].x = enemy[i].x;
+                    explosion[last_explosion].y = enemy[i].y;
+                    explosion[last_explosion].frame = 0;
+                    explosion_valid[last_explosion] = true;
+                    explode->Play();
+                }
+            }
+
+            bool firebullet = false;
+            //need to use UpdateEnemyBullets() and UpdateEnemyExplosion() (may not)
+            //if enemy and player in the same cell columns
+            //slide 37
+            if (Player.x - Player.frame_width < enemy[i].x && enemy[i].x < Player.x + Player.frame_width)
+            {
+                //if the enemy is point to the same direction to the player
+                if (enemy[i].move_y < 0 && enemy[i].y > Player.y)
+                {
+                    firebullet = true;
+                }
+
+                if (enemy[i].move_y > 0 && enemy[i].y < Player.y)
+                {
+                    firebullet = true;
+                }
+            }
+
+            //if enemy and the player are in the same cell row
+            if (Player.y - Player.frame_height < enemy[i].y && enemy[i].y < Player.y + Player.frame_height)
+            {
+                //if enemy's direction point to Player
+                if (enemy[i].move_x < 0 && enemy[i].x > Player.x)
+                {
+                    firebullet = true;
+                }
+
+                if (enemy[i].move_x > 0 && enemy[i].x < Player.x)
+                {
+                    firebullet = true;
+                }
+            }
+
+            //shooting at the player
+            if (firebullet && GetTickCount() - enemy_cooling[i] > enemy_cooldown)
+            {
+                gunfire->Play();
+                enemy_cooling[i] = GetTickCount();
+                enemy_last_bullet++; //leads to a new bullet being fired
+
+                //if the end of the bullet array is reached then it will go back to the beginning the array and restart
+                if (enemy_last_bullet >= ENEMY_BULLET_NUMBER)
+                {
+                    enemy_last_bullet = 0;
+                }
+
+                //the bullet will be fired from the center
+                Enemybullet[enemy_last_bullet].x = enemy[i].x + enemy[i].frame_width / 2 - Enemybullet[enemy_last_bullet].frame_width / 2;
+                Enemybullet[enemy_last_bullet].y = enemy[i].y + enemy[i].frame_height / 2 - Enemybullet[enemy_last_bullet].frame_height / 2;
+                enemy_bullet_valid[enemy_last_bullet] = true;
+
+                //the bullet direction will be the same as the player
+                switch (enemy[i].frame)
+                {
+                case 0:
+                    Enemybullet[enemy_last_bullet].move_x = 0;
+                    Enemybullet[enemy_last_bullet].move_y = -enemy_bullet_speed;
+                    break;
+                case 1:
+                    Enemybullet[enemy_last_bullet].move_x = enemy_bullet_speed;
+                    Enemybullet[enemy_last_bullet].move_y = 0;
+                    break;
+                case 2:
+                    Enemybullet[enemy_last_bullet].move_x = 0;
+                    Enemybullet[enemy_last_bullet].move_y = enemy_bullet_speed;
+                    break;
+                case 3:
+                    Enemybullet[enemy_last_bullet].move_x = -enemy_bullet_speed;
+                    Enemybullet[enemy_last_bullet].move_y = 0;
+                    break;
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < ENEMY_BULLET_NUMBER; i++)
+    {
+        if (enemy_bullet_valid[i])
+        {
+            Enemybullet[i].x += Enemybullet[i].move_x;
+            Enemybullet[i].y += Enemybullet[i].move_y;
+
+            //if enemy bullet is out of screen
+            if (Enemybullet[i].x < 0 || Enemybullet[i].x > Width || Enemybullet[i].y < 0 || Enemybullet[i].y > Height)
+            {
+                Enemybullet[i].move_x = 0;
+                Enemybullet[i].move_y = 0;
+                enemy_bullet_valid[i] = false;
+            }
+        }
+    }
 }
 
 bool Game_Init(HWND hwnd)
@@ -434,6 +830,9 @@ bool Game_Init(HWND hwnd)
     LoadSticks();
     LoadPlayerBullets();
     LoadPlayerExplsions();
+    LoadEnemyBullets();
+    LoadEnemyExplosions();
+    LoadEnemies();
 
     //placeholder
     background = CreateModel2D(L"background.png");
@@ -478,6 +877,7 @@ void Game_Run()
         UpdatePlayer();
         UpdatePlayerBullets();
         UpdatePlayerExplosions();
+        UpdateEnemies();
 
         spriteBatch->Begin();
 
@@ -524,6 +924,68 @@ void Game_Run()
             }
         }
 
+        for (int i = 0; i < ENEMY_BULLET_NUMBER; i++)
+        {
+            if (enemy_bullet_valid[i])
+            {
+                DrawModel2D(Enemybullet[i]);
+            }
+        }
+
+        for (int i = 0; i < ENEMY_BULLET_NUMBER; i++)
+        {
+            if (enemyexplosion_valid[i])
+            {
+                DrawModel2D(enemyexplosion[i]);
+            }
+        }
+
+        for (int i = 0; i < enemy_amounts[waves]; i++)
+        {
+            if (enemy_valid[i])
+            {
+                DrawModel2D(enemy[i]);
+            }
+        }
+
+        //this can be triggered if it is in the Game_Run method
+        //a different variable other then score needs to be used so that way it can track the enemies defeated per round
+        if (killTracker == enemy_amounts[waves])
+        {
+            //in order to end the game, the score has to be the sum of all enemies faced since score will not restart per round
+            if (score == 370)
+            {
+                MessageBox(NULL, L"Victory, you saved the sector from the enemies", L"Game Over", MB_OK);
+                gameover = true;
+            }
+            else
+            {
+                //when else is called that is the sign that the wave is over and a new wave needs to be set up
+                // killTracker needs to be reset to 0
+                // wave variable needs to be increment by 1
+                // this should have a method called where it will show a text box containing different options 
+                // these options will about health, cooldown, and speed
+                // there should also be a button to go to the next wave as well
+                // that button that leads to the next wave need to have a different method where it reset every
+                // as of 4/20/26: work on get the next wave and resetting everything to work
+                //the method name for the method to change the wave and do the upgrades will be called, NextWave()
+                //killTracker restart and wave increment will be in NextWave()
+                //the method name for the method to reset everything for the next wave will be call WaveReset()
+
+               
+                //MessageBox(NULL, L"Victory", L"Game Over", MB_OK);
+                //gameover = true;
+            }
+
+
+
+            //this could be where the wave function is set
+            //MessageBox(NULL, L"Victory", L"Game Over", MB_OK);
+            //MessageBox(NULL, L"Proceed?", L"Confirm", MB_YESNO | MB_ICONQUESTION);
+            //replace this later
+            //gameover = true;
+        }
+
         spriteBatch->End();
         swapchain->Present(0, 0);
     }
@@ -554,6 +1016,16 @@ void Game_End()
     for (int i = 0; i < PLAYER_BULLETS_NUMBER; i++)
     {
         bullet[i].texture->Release();
+    }
+
+    for (int i = 0; i < ENEMY_BULLET_NUMBER; i++)
+    {
+        Enemybullet[i].texture->Release();
+    }
+
+    for (int i = 0; i < enemy_amounts[waves]; i++)
+    {
+        enemy[i].texture->Release();
     }
 
     CleanD3D();
