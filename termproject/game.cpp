@@ -212,126 +212,11 @@ void UpgradeHealth()
             MessageBox(NULL, L"Upgrade brought", L"Upgrade has been gotten", MB_OK | MB_ICONERROR);
         }
     }
-}
-
-void NextWave()
-{
-    //resetting killTracker and incrementing the wave
-    killTracker = 0;
-    waves++;
-
-    //code for upgrade path
-    //starting with the message stating they won the round and if they want to go to the upgrades
-    //it will be a yes or no (yes will start them on the upgrades path, no will start the next round)
-    int message1 = MessageBox(NULL, L"Wave Completed!", L"Do you want to go to the upgrade section?", MB_YESNO | MB_ICONQUESTION);
-
-    if (message1 == IDYES)
+    else
     {
-        //this is where the code for the upgrades will be in 
-        //introduction box that tells the player they are in the upgrade section and that they move the dialog boxes to see the other upgrades
-        int introMessage = MessageBox(NULL, L"Welcome to the upgrade session", L"Move the message boxes to see the upgrade options", MB_OK | MB_ICONEXCLAMATION);
-
-        //Click on the messagebox does work but I need to put in a loop that keeps going until the the user decides to stop upgrading then calls the WaveReset function
-        //given how all of them must be active as long as the user is still on the upgrade section, they must have seperate loops and when the variables that controls the loops are all false thats when WaveReset is called
-        //One loop for speed upgrade
-        //One loop for cooldown upgrade
-        //One loop for Health upgrade
-
-        //if all of these go false then WaveReset is called
-        bool SpeedUpgrading = true;
-        bool CooldownUpgrading = true;
-        bool HealthUpgrading = true;
-
-        //intializing all of these variables related to the messagebox
-        int SpeedMessage;
-        int CooldownMessage;
-        int HealthMessage;
-        
-
-        if (introMessage == IDOK)
-        {
-
-            while (SpeedUpgrading == true)
-            {
-                SpeedMessage = MessageBox(NULL, L"Do you want to upgrade your speed value?", L"Click yes to upgrade, click no to get rid of this box", MB_YESNO | MB_ICONQUESTION);
-
-                if (SpeedMessage == IDYES)
-                {
-                    UpgradeSpeed();
-                }
-                else if (SpeedMessage == IDNO)
-                {
-                    SpeedUpgrading = false;
-                }
-            }
-
-            while (CooldownUpgrading == true)
-            {
-                CooldownMessage = MessageBox(NULL, L"Do you want to upgrade your cooldown?", L"Click yes to upgrade, click no to get rid of this box", MB_YESNO | MB_ICONQUESTION);
-
-                if (CooldownMessage == IDYES)
-                {
-                    UpgradeCooldown();
-                }
-                else if (CooldownMessage == IDNO)
-                {
-                    CooldownUpgrading = false;
-
-                }
-            }
-
-            while (HealthUpgrading == true)
-            {
-                HealthMessage = MessageBox(NULL, L"Do you want to upgrade your health points?", L"Click yes to upgrade, click no to get rid of this box", MB_YESNO | MB_ICONQUESTION);
-
-                if (HealthMessage == IDYES)
-                {
-                    UpgradeHealth();
-                }
-                else if (HealthMessage == IDNO)
-                {
-                    HealthUpgrading = false;
-                }
-            }
-
-            if (SpeedUpgrading == false && CooldownUpgrading == false && HealthUpgrading == false)
-            {
-                //WaveReset();
-
-                //placeholder until WaveReset is made
-                gameover = true;
-            }
-            /*SpeedMessage = MessageBox(NULL, L"Do you want to upgrade your speed value?", L"Click yes to upgrade, click no to get rid of this box", MB_YESNO | MB_ICONQUESTION);
-
-            CooldownMessage = MessageBox(NULL, L"Do you want to upgrade your cooldown?", L"Click yes to upgrade, click no to get rid of this box", MB_YESNO | MB_ICONQUESTION);
-
-            HealthMessage = MessageBox(NULL, L"Do you want to upgrade your health points?", L"Click yes to upgrade, click no to get rid of this box", MB_YESNO | MB_ICONQUESTION);
-
-            if (SpeedMessage == IDYES)
-            {
-                UpgradeSpeed();
-            }
-            else if (CooldownMessage == IDYES)
-            {
-                UpgradeCooldown();
-            }
-            else if (HealthMessage == IDYES)
-            {
-                UpgradeHealth();
-            }*/
-        }
-    }
-    else if (message1 == IDNO)
-    {
-        //WaveReset();
-
-        //placeholder until WaveReset is made
-        gameover = true;
+        MessageBox(NULL, L"Unable to buy upgrade", L"Not enough funds", MB_OK | MB_ICONERROR);
     }
 }
-
-//void WaveReset(){}
-
 
 void LoadPlayer()
 {
@@ -746,6 +631,187 @@ void UpdatePlayerBullets()
     }
 }
 
+void WaveReset()
+{
+    //things that will get released are Player.texture, stones, boxes, sticks, player and enemy bullets, and enemy amounts
+
+    Player.texture->Release();
+    /*for (int i = 0; i < STONES_NUMBER; i++)
+    {
+        stone[i].texture->Release();
+    }
+
+    for (int i = 0; i < BOXES_NUMBER; i++)
+    {
+        box[i].texture->Release();
+    }
+
+    for (int i = 0; i < STICKS_NUMBER; i++)
+    {
+        stick[i].texture->Release();
+    }*/
+
+    for (int i = 0; i < PLAYER_BULLETS_NUMBER; i++)
+    {
+        bullet[i].texture->Release();
+    }
+
+    for (int i = 0; i < ENEMY_BULLET_NUMBER; i++)
+    {
+        Enemybullet[i].texture->Release();
+    }
+
+    /*for (int i = 0; i < enemy_amounts[waves]; i++)
+    {
+        enemy[i].texture->Release();
+    }*/
+
+    //resetting the object arrays so that they are made false
+    for (int i = 0; i < PLAYER_BULLETS_NUMBER; i++)
+    {
+        bullet_valid[i] = false;
+    }
+
+    for (int i = 0; i < ENEMY_BULLET_NUMBER; i++)
+    {
+        enemy_bullet_valid[i] = false;
+        enemyexplosion_valid[i] = false;
+    }
+
+    for (int i = 0; i < enemy_amounts[waves]; i++)
+    {
+        enemy_valid[i] = true;
+    }
+
+    for (int i = 0; i < STONES_NUMBER; i++)
+    {
+        stone_valid[i] = false;
+    }
+
+    for (int i = 0; i < BOXES_NUMBER; i++)
+    {
+        box_valid[i] = false;
+    }
+
+    for (int i = 0; i < STICKS_NUMBER; i++)
+    {
+        stick_valid[i] = false;
+    }
+
+
+
+    //recall the Load functions
+    LoadPlayer();
+    LoadStones();
+    LoadBoxes();
+    LoadSticks();
+    LoadPlayerBullets();
+    LoadPlayerExplsions();
+    LoadEnemyBullets();
+    LoadEnemyExplosions();
+    LoadEnemies();
+
+    killTracker = 0;
+}
+
+void NextWave()
+{
+    //resetting killTracker and incrementing the wave
+    killTracker = 0;
+    waves++;
+
+    //code for upgrade path
+    //starting with the message stating they won the round and if they want to go to the upgrades
+    //it will be a yes or no (yes will start them on the upgrades path, no will start the next round)
+    int message1 = MessageBox(NULL, L"Wave Completed!", L"Do you want to go to the upgrade section?", MB_YESNO | MB_ICONQUESTION);
+
+    if (message1 == IDYES)
+    {
+        //this is where the code for the upgrades will be in 
+        //introduction box that tells the player they are in the upgrade section and that they move the dialog boxes to see the other upgrades
+        int introMessage = MessageBox(NULL, L"Welcome to the upgrade session", L"Move the message boxes to see the upgrade options", MB_OK | MB_ICONEXCLAMATION);
+
+        //Click on the messagebox does work but I need to put in a loop that keeps going until the the user decides to stop upgrading then calls the WaveReset function
+        //given how all of them must be active as long as the user is still on the upgrade section, they must have seperate loops and when the variables that controls the loops are all false thats when WaveReset is called
+        //One loop for speed upgrade
+        //One loop for cooldown upgrade
+        //One loop for Health upgrade
+
+        //if all of these go false then WaveReset is called
+        bool SpeedUpgrading = true;
+        bool CooldownUpgrading = true;
+        bool HealthUpgrading = true;
+
+        //intializing all of these variables related to the messagebox
+        int SpeedMessage;
+        int CooldownMessage;
+        int HealthMessage;
+
+
+        if (introMessage == IDOK)
+        {
+
+            while (SpeedUpgrading == true)
+            {
+                SpeedMessage = MessageBox(NULL, L"Do you want to upgrade your speed value?", L"Click yes to upgrade, click no to get rid of this box", MB_YESNO | MB_ICONQUESTION);
+
+                if (SpeedMessage == IDYES)
+                {
+                    UpgradeSpeed();
+                }
+                else if (SpeedMessage == IDNO)
+                {
+                    SpeedUpgrading = false;
+                }
+            }
+
+            while (CooldownUpgrading == true)
+            {
+                CooldownMessage = MessageBox(NULL, L"Do you want to upgrade your cooldown?", L"Click yes to upgrade, click no to get rid of this box", MB_YESNO | MB_ICONQUESTION);
+
+                if (CooldownMessage == IDYES)
+                {
+                    UpgradeCooldown();
+                }
+                else if (CooldownMessage == IDNO)
+                {
+                    CooldownUpgrading = false;
+
+                }
+            }
+
+            while (HealthUpgrading == true)
+            {
+                HealthMessage = MessageBox(NULL, L"Do you want to upgrade your health points?", L"Click yes to upgrade, click no to get rid of this box", MB_YESNO | MB_ICONQUESTION);
+
+                if (HealthMessage == IDYES)
+                {
+                    UpgradeHealth();
+                }
+                else if (HealthMessage == IDNO)
+                {
+                    HealthUpgrading = false;
+                }
+            }
+
+            if (SpeedUpgrading == false && CooldownUpgrading == false && HealthUpgrading == false)
+            {
+                WaveReset();
+
+                //placeholder until WaveReset is made
+                //gameover = true;
+            }
+        }
+    }
+    else if (message1 == IDNO)
+    {
+        WaveReset();
+
+        //placeholder until WaveReset is made
+        //gameover = true;
+    }
+}
+
 void UpdatePlayerExplosions()
 {
     for (int i = 0; i < PLAYER_BULLETS_NUMBER; i++)
@@ -1033,6 +1099,16 @@ bool Game_Init(HWND hwnd)
         return false;
     }
 
+    try
+    {
+        spriteFont = std::make_unique<SpriteFont>(dev, L"times_new_roman.spritefont");
+    }
+    catch (std::runtime_error e)
+    {
+        MessageBox(NULL, L"Loading times_new_roman.spritefont error", L"Error", MB_OK | MB_ICONERROR);
+        return false;
+    }
+
     return true;
 }
 
@@ -1127,6 +1203,10 @@ void Game_Run()
 
         //need to add the spritefont and music
         //For spritefont, add the health of the player, score, and cash
+        wchar_t s[100];
+        swprintf(s, 100, L"Player Health: %d, Gunfire cooldown time: %d, Player speed: %f, Score: %d, Money earned: $%d", player_health, player_cooldown, player_speed, score, money_earned);
+        spriteFont->DrawString(spriteBatch.get(), s, XMFLOAT2(50, 50), Colors::Black);
+
 
         //this can be triggered if it is in the Game_Run method
         //a different variable other then score needs to be used so that way it can track the enemies defeated per round

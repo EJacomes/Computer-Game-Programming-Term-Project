@@ -1,16 +1,16 @@
 ﻿  game.cpp
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(524,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(529,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(534,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(539,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(623,66): warning C4018: '>': signed/unsigned mismatch
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(646,42): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(649,42): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(654,42): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(657,42): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(958,61): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(961,61): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(966,61): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(969,61): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\erija\source\repos\termproject\termproject\game.cpp(1042,26): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(409,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(414,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(419,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(424,25): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(508,66): warning C4018: '>': signed/unsigned mismatch
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(531,42): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(534,42): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(539,42): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(542,42): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(1024,61): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(1027,61): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(1032,61): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(1035,61): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\erija\source\repos\termproject\termproject\game.cpp(1118,26): warning C4305: 'initializing': truncation from 'double' to 'float'
   termproject.vcxproj -> C:\Users\erija\source\repos\termproject\x64\Debug\termproject.exe
