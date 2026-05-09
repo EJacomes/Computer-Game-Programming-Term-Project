@@ -5,7 +5,7 @@
 //max waves: 10
 //User will start out with a slow speed, slow fire rate, low health
 //User will have the chance to upgrade those elements after the end of each round
-//The amount of enemy that user will have to face is based on starting starting amount of enemies + (wave num - 1 * 5) (starting amount is 10)
+//The amount of enemy that user will have to face is based on starting starting amount of enemies + (wave num * 5) (starting amount is 10)
 //enemies will only have one health and will give the player a certain amount of money to spend for upgrades
 
 
@@ -24,7 +24,7 @@ Please mark the date of successfull completion of item
 and buttons to reset or quit), upgrade shop, health bar that changes during game play 4/27/26
 9. Work on getting the upgrade shop working to where the upgrade are fully working 4/27/26
 10. Get the next wave feature working and shown to the user 4/27/27
-11. add music to the game
+11. add music to the game 5/3/26
 
 *if there is anymore, then it should be added onto the list
 */
@@ -91,7 +91,9 @@ int money_earned = 0;
 //player score
 int score = 0;
 //tracks amount of enemy dead
+//glitch found where killTracker will increment based on the amount bullets hitting the enemy
 int killTracker = 0;
+int killFlag = 0;
 
 //enemy settings
 //need to make the drawing of the enemy
@@ -118,7 +120,9 @@ int player_cooldown = 1000; // allow to fire every x ms
 int CooldownCost = 2;
 
 //the variable player_health will start at 3 but will have a max of 15
-int player_health = 3;
+//for debugging, the health will be at 100
+int player_health = 100000;
+//int player_health = 3;
 int HealthCost = 2;
 
 int hit = -1; //this will serve in place of the die var from tank game
@@ -159,6 +163,9 @@ float enemy_bullet_speed = 2 * enemy_speed;
 Model2D enemyexplosion[ENEMY_BULLET_NUMBER];
 bool enemyexplosion_valid[ENEMY_BULLET_NUMBER];
 int enemy_last_explosion = -1;
+
+//debug code
+int CountEnemy = 0;
 
 //methods to update the elements that are everchanging
 void UpgradeSpeed()
@@ -204,13 +211,13 @@ void UpgradeHealth()
 {
     if (money_earned >= HealthCost)
     {
-        if (player_health == 15)
+        if (player_health == 100)
         {
             MessageBox(NULL, L"Max Upgrade level reached", L"Max health reached", MB_OK | MB_ICONERROR);
         }
         else
         {
-            player_health++;
+            player_health += 2;
             money_earned = money_earned - HealthCost;
             HealthCost = HealthCost + 2;
             MessageBox(NULL, L"Upgrade brought", L"Upgrade has been gotten", MB_OK | MB_ICONERROR);
@@ -338,6 +345,8 @@ void LoadEnemies()
 {
     for (int i = 0; i < enemy_amounts[waves]; i++)
     {
+        //counts how many enemies are
+        CountEnemy++;
         enemy[i] = CreateModel2D(L"enemy_model.png", 4, 1);
         enemy_valid[i] = true;
 
@@ -481,6 +490,9 @@ void UpdatePlayer()
     {
        if (enemy_bullet_valid[i] && CheckModel2DCollided(Player, Enemybullet[i]) && hit < 0)
        {
+           enemy_bullet_valid[i] = false;
+           Enemybullet[i].move_x = 0;
+           Enemybullet[i].move_y = 0;
            enemy_last_explosion++;
 
            if (enemy_last_explosion >= ENEMY_BULLET_NUMBER)
@@ -493,16 +505,20 @@ void UpdatePlayer()
            enemyexplosion[enemy_last_explosion].frame = 0;
            enemyexplosion_valid[enemy_last_explosion] = true;
            //player_health -= 1;
-           hit = enemy_last_explosion;
+           //hit = enemy_last_explosion;
            //MessageBox(NULL, L"Player health", L"hit", MB_OK);
            //if one bullet hits the player then the box will be played three times
 
            explode->Play();
+
+           hit = enemy_last_explosion;
            
            if (player_health < 0)
            {
                player_health = 0;
            }
+
+           break;
        }
     }
 }
@@ -682,10 +698,10 @@ void WaveReset()
         enemyexplosion_valid[i] = false;
     }
 
-    for (int i = 0; i < enemy_amounts[waves]; i++)
+    /*for (int i = 0; i < enemy_amounts[waves]; i++)
     {
         enemy_valid[i] = true;
-    }
+    }*/
 
     for (int i = 0; i < STONES_NUMBER; i++)
     {
@@ -715,7 +731,7 @@ void WaveReset()
     LoadEnemyExplosions();
     LoadEnemies();
 
-    killTracker = 0;
+    //killTracker = 0;
 }
 
 void NextWave()
@@ -723,6 +739,7 @@ void NextWave()
     //resetting killTracker and incrementing the wave
     killTracker = 0;
     waves++;
+    CountEnemy = 0;
 
     //code for upgrade path
     //starting with the message stating they won the round and if they want to go to the upgrades
@@ -825,7 +842,7 @@ void UpdatePlayerExplosions()
             explosion[i].frame++;
         }
 
-        if (explosion[i].frame >= explosion[i].frame_total)
+        if (explosion[i].frame >= 64)
         {
             explosion_valid[i] = false;
         }
@@ -952,7 +969,7 @@ void UpdateEnemies()
                     bullet_valid[j] = false;
                     enemy_valid[i] = false;
                     score++;
-                    killTracker++;
+                    //killTracker++;
                     money_earned += money_dropped;
                     last_explosion++;
 
@@ -966,8 +983,23 @@ void UpdateEnemies()
                     explosion[last_explosion].frame = 0;
                     explosion_valid[last_explosion] = true;
                     explode->Play();
+                    //each time an enemy is hitted by a bullet, it increases by 1
+                    //this causes an issue where if it get hits by like 2 or 3 bullets then killTracker increased by 2 or 3
+                    //killTracker++;
+                    killFlag++;
+
+                    if (killFlag >= 1)
+                    {
+                        killTracker++;
+                    }
+
+                    break;
                 }
             }
+
+            //add a flag called killFlag and no matter what amount of bullets the enemy takes it will only increase killTracker by 1
+            
+
 
             bool firebullet = false;
             //need to use UpdateEnemyBullets() and UpdateEnemyExplosion() (may not)
@@ -1226,7 +1258,7 @@ void Game_Run()
         //need to add the spritefont and music
         //For spritefont, add the health of the player, score, and cash
         wchar_t s[200];
-        swprintf(s, 200, L"Player Health: %d, Gunfire cooldown time: %d, Player speed: %f, Score: %d, Money earned: $%d, Wave: %d", player_health, player_cooldown, player_speed, score, money_earned, waves);
+        swprintf(s, 200, L"Player Health: %d, Gunfire cooldown time: %d, Player speed: %f, Score: %d, Money earned: $%d, Wave: %d, killTracker (debug): %d, Enemy Count (Debug): %d", player_health, player_cooldown, player_speed, score, money_earned, waves, killTracker, CountEnemy);
         spriteFont->DrawString(spriteBatch.get(), s, XMFLOAT2(50, 50), Colors::Black);
 
 
